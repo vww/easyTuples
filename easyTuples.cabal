@@ -1,7 +1,7 @@
 Name:            easyTuples
 Version:         0.1.1
 Synopsis:        Easy access to tuples, easy tuple manipulation 
-Description:     Easy access to tuples, easy tuple manipulation
+Description:     Easy access to tuples, easy tuple manipulation : divide, swap, cut, extend
 Copyright:       (c) Victor V 2013
 License:	     MIT
 License-file:    LICENSE

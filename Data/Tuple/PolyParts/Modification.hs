@@ -153,9 +153,9 @@ instance (PartTHalfL (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a1
 halfTupleL :: TupleHalf a => a -> (PartTHalfL a, PartTHalfR a)
 halfTupleL = halfTuple
 
--- |  halfTupleEvenR is a halfTupleR for odd-sized tuples.
+-- |  halfTupleOddR is a halfTupleR for odd-sized tuples.
 --   @
---      halfTupleEvenR ("d", "s", True, False, False) == ( ("d", "s"), (True, False, False) )
+--      halfTupleOddR ("d", "s", True, False, False) == ( ("d", "s"), (True, False, False) )
 --   @
 --
 halfTupleOddR :: (TupleSize a, TupleHalf a, TupleLst (PartTHalfL a), TupleExtendL (PartTHalfR a) (PartTLst (PartTHalfL a)), TupleCutR (PartTHalfL a) ) => 
@@ -166,6 +166,13 @@ halfTupleOddR t
 
 
 
+-- |  swap allow to "reverse" tuple. It works for any tuple
+--   @
+--      swap ("d", "s", True, False) == (False, True, "s", "d")
+--      swap ("d", "s") == ("s", "d")
+--      swap ()  == ()
+--   @
+--
 class TupleSwap a where
     type SwapTuple a
     swap :: a -> SwapTuple a
@@ -242,6 +249,14 @@ instance (SwapTuple (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14
 
 
 
+
+-- |  cutTupleL allow to get rid from left/first field from tuple.
+--   @
+--      cutTupleL ("d", "s", True, False) == ("s", True, False)
+--      cutTupleL ("d", "s") == OneTuple "d"
+--      cutTupleL . cutTupleL . cutTupleL . cutTupleL $ ("d", "s", True, False)  == ()
+--   @
+--
 class TupleCutL a where
     type PartTCutL a
     cutTupleL :: a -> PartTCutL a
@@ -314,6 +329,13 @@ instance (PartTCutL (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14
 
 
 
+-- |  cutTupleR allow to get rid from right/last field from tuple.
+--   @
+--      cutTupleR ("d", "s", True, False) == ("d", "s", True)
+--      cutTupleR ("d", "s") == OneTuple "s"
+--      cutTupleR . cutTupleR . cutTupleR . cutTupleR $ ("d", "s", True, False)  == ()
+--   @
+--
 class TupleCutR a where
     type PartTCutR a
     cutTupleR :: a -> PartTCutR a
@@ -385,7 +407,12 @@ instance (PartTCutR (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14
     cutTupleR (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, _) = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14)	
 
 
-
+-- |  extendTupleR allow extend tuple from right/last field from tuple.
+--   @
+--      ("d", "s", True, False) `extendTupleR` "AddMe" == ("d", "s", True, False, "AddMe")
+--      ("d", "s") `extendTupleR` "AddMe" == ("d", "s", "AddMe")
+--   @
+--
 class TupleExtendR a b where
     type TupleExtendedR a b
     extendTupleR :: a -> b -> TupleExtendedR a b
@@ -456,6 +483,12 @@ instance (TupleExtendedR (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13
     extendTupleR (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14) b = (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, b)
 
 
+-- |  extendTupleL allow extend tuple from left/first field from tuple.
+--   @
+--      "AddMe" `extendTupleL` ("d", "s", True, False) == ("AddMe", "d", "s", True, False)
+--      "AddMe" `extendTupleL` () == OneTuple "AddMe"
+--   @
+--
 class TupleExtendL a b where
     type TupleExtendedL b a
     extendTupleL :: b -> a -> TupleExtendedL b a
@@ -526,21 +559,14 @@ instance (TupleExtendedL a0 (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, 
     extendTupleL a0 (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14) = (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14)	
 	
 
-flatTupleL :: (TupleSnd (PartTFst a), TupleFst a, TupleFst (PartTFst a),
-      TupleExtendL
-        (TupleExtendedL (PartTSnd (PartTFst a)) (PartTCutL a))
-        (PartTFst (PartTFst a)),
-      TupleExtendL (PartTCutL a) (PartTSnd (PartTFst a)), TupleCutL a) =>
-     a
-     -> TupleExtendedL
-          (PartTFst (PartTFst a))
-          (TupleExtendedL (PartTSnd (PartTFst a)) (PartTCutL a))
-flatTupleL ts = t1 `extendTupleL` (t2 `extendTupleL` (cutTupleL ts))
-        where
-           t = fst ts
-           t1 = fst t
-           t2 = snd t
-
+-- |  Constraint looks awful :) This function allow to "flat" nested tuple from right. Note, last field of tuple must be a tuple with minimum 2 fields
+--   @
+--      flatTupleR ("d", "s", (True, False)) == ("d", "s", True, False)
+--      flatTupleR . flatTupleR ("d", ("s", (True, False))) == ("d", "s", True, False)
+--      flatTupleR ("d", ("IGNORE_ME", "s", "f")) = ("d", "s", "f")
+--   @
+--
+--   Note, if flattered tuple has more, than 2 fields, reemains only 2 right/last
 flatTupleR :: (TuplePrelast (PartTLst a), TupleLst a, TupleLst (PartTLst a),
       TupleExtendR
         (TupleExtendedR (PartTCutR a) (PartTPrelast (PartTLst a)))
@@ -557,12 +583,46 @@ flatTupleR ts = ((cutTupleR ts) `extendTupleR` tbefore) `extendTupleR` tlst
            tbefore = prelast t
            tlst    = lst t
 	
+-- |  Constraint looks awful :) This is same as 'flatTupleR' function, but it "flat" nested tuple from left. Note, first field of tuple must be a tuple with minimum 2 fields
+--   @
+--      flatTupleL ("d", "s", (True, False)) == ("d", "s", True, False)
+--      flatTupleL . flatTupleR ((("d", "s",) True), False) == ("d", "s", True, False)
+--      flatTupleL (("s", "f", "IGNORE_ME"), "d") = ("d", "s", "f")
+--   @
+--
+--   Note, if flattered tuple has more, than 2 fields, reemains only 2 right/last
+flatTupleL :: (TupleSnd (PartTFst a), TupleFst a, TupleFst (PartTFst a),
+      TupleExtendL
+        (TupleExtendedL (PartTSnd (PartTFst a)) (PartTCutL a))
+        (PartTFst (PartTFst a)),
+      TupleExtendL (PartTCutL a) (PartTSnd (PartTFst a)), TupleCutL a) =>
+     a
+     -> TupleExtendedL
+          (PartTFst (PartTFst a))
+          (TupleExtendedL (PartTSnd (PartTFst a)) (PartTCutL a))
+flatTupleL ts = t1 `extendTupleL` (t2 `extendTupleL` (cutTupleL ts))
+        where
+           t = fst ts
+           t1 = fst t
+           t2 = snd t
 
+-- |  exchangeT2R exchange a tuple field from left to right tuple in a tuple2
+-- 
+--   @
+--      exchangeT2R ( ("d", "s", "F") , (True, False) ) == ( ("d", "s") , ("F", True, False) )
+--   @
+--
 exchangeT2R :: (TupleLst a, TupleExtendL b (PartTLst a), TupleCutR a) => (a, b) -> (PartTCutR a, TupleExtendedL (PartTLst a) b)
 exchangeT2R (t1, t2) = (cutTupleR t1, t `extendTupleL` t2)
         where 
            t = lst t1
 
+-- |  exchangeT2R exchange a tuple field from right to left tuple in a tuple2
+-- 
+--   @
+--      exchangeT2L ( ("d", "s") , (True, False, True) ) == ( ("d", "s", True) , (False, True) )
+--   @
+--
 exchangeT2L :: (TupleFst b, TupleExtendR a (PartTFst b), TupleCutL b) => (a, b) -> (TupleExtendedR a (PartTFst b), PartTCutL b)
 exchangeT2L (t1, t2) = (t1 `extendTupleR` t, cutTupleL t2)
         where 
