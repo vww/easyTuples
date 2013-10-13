@@ -1,0 +1,16 @@
+Name:            easyTuples
+Version:         0.1.1
+Synopsis:        Easy access to tuples, easy tuple manipulation 
+Description:     Easy access to tuples, easy tuple manipulation
+Copyright:       (c) Victor V 2013
+License:	     MIT
+License-file:    LICENSE
+Author:          Victor V
+Maintainer:      https://github.com/vww/easyTuples
+Stability:       experimental
+Build-type:      Simple
+Build-depends:   base
+Exposed-Modules: Data.Tuple.PolyParts.OneTuple
+                 Data.Tuple.PolyParts.Select
+                 Data.Tuple.PolyParts.Modification
+                 Data.Tuple.PolyParts.List
